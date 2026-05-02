@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import axios from 'axios';
 
-// Initial state
 const initialState = {
   pins: [],
   boards: [],
@@ -16,7 +15,6 @@ const initialState = {
   notifications: [],
 };
 
-// Action types
 const actionTypes = {
   SET_LOADING: 'SET_LOADING',
   SET_ERROR: 'SET_ERROR',
@@ -35,7 +33,6 @@ const actionTypes = {
   FOLLOW_USER: 'FOLLOW_USER',
 };
 
-// Reducer
 const dataReducer = (state, action) => {
   switch (action.type) {
     case actionTypes.SET_LOADING:
@@ -94,20 +91,16 @@ const dataReducer = (state, action) => {
   }
 };
 
-// API service
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000',
   timeout: 10000,
 });
 
-// Context
 const DataContext = createContext();
 
-// Provider component
 export const DataProvider = ({ children }) => {
   const [state, dispatch] = useReducer(dataReducer, initialState);
 
-  // Actions
   const setLoading = (loading) => {
     dispatch({ type: actionTypes.SET_LOADING, payload: loading });
   };
@@ -116,7 +109,6 @@ export const DataProvider = ({ children }) => {
     dispatch({ type: actionTypes.SET_ERROR, payload: error });
   };
 
-  // API calls
   const fetchPins = async () => {
     try {
       setLoading(true);
@@ -220,7 +212,6 @@ export const DataProvider = ({ children }) => {
     dispatch({ type: actionTypes.FOLLOW_USER, payload: userId });
   };
 
-  // Initialize data
   useEffect(() => {
     fetchPins();
     fetchFeed();
@@ -245,7 +236,6 @@ export const DataProvider = ({ children }) => {
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
 };
 
-// Hook to use the context
 export const useData = () => {
   const context = useContext(DataContext);
   if (!context) {

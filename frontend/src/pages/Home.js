@@ -80,9 +80,11 @@ const Home = () => {
             className="my-masonry-grid"
             columnClassName="my-masonry-column"
           >
+            <div className="recommendations-container">
             {recommendations.map((pin) => (
               <PinCard key={pin.id} pin={pin} />
             ))}
+            </div>
           </Masonry>
         </Section>
       )}

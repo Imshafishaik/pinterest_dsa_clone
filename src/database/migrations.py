@@ -1,7 +1,4 @@
-"""
-Database Migrations for Pinterest Clone
-Initial data seeding and schema management
-"""
+
 
 from sqlalchemy.orm import Session
 from sqlalchemy import text
@@ -12,11 +9,9 @@ import random
 from datetime import datetime, timedelta
 
 def hash_password(password):
-    """Hash password for storage"""
     return hashlib.sha256(password.encode()).hexdigest()
 
 def create_sample_users(session: Session):
-    """Create sample users"""
     users_data = [
         {
             'username': 'alice_creative',
@@ -102,7 +97,6 @@ def create_sample_users(session: Session):
     return created_users
 
 def create_sample_tags(session: Session):
-    """Create sample tags"""
     tags_data = [
         {'name': 'diy', 'category': 'craft'},
         {'name': 'craft', 'category': 'craft'},
@@ -139,7 +133,6 @@ def create_sample_tags(session: Session):
     return created_tags
 
 def create_sample_boards(session: Session, users):
-    """Create sample boards"""
     boards_data = [
         {'name': 'DIY Projects', 'category': 'craft', 'creator_id': users[0].id},
         {'name': 'Recipe Collection', 'category': 'food', 'creator_id': users[1].id},
@@ -170,7 +163,6 @@ def create_sample_boards(session: Session, users):
     return created_boards
 
 def create_sample_pins(session: Session, users, boards, tags):
-    """Create sample pins"""
     pins_data = [
         {
             'title': 'DIY Wall Art Ideas',
@@ -294,7 +286,6 @@ def create_sample_pins(session: Session, users, boards, tags):
         }
     ]
     
-    # Create tag name to tag object mapping
     tag_map = {tag.name: tag for tag in tags}
     
     created_pins = []
@@ -309,10 +300,9 @@ def create_sample_pins(session: Session, users, boards, tags):
             height=pin_data['height']
         )
         session.add(pin)
-        session.flush()  # Get the pin ID
+        session.flush()  
         created_pins.append(pin)
         
-        # Add tags to pin
         for tag_name in pin_data['tag_names']:
             if tag_name in tag_map:
                 pin.tags.append(tag_map[tag_name])
@@ -324,15 +314,13 @@ def create_sample_interactions(session: Session, users, pins):
     """Create sample interactions for trending detection"""
     interaction_types = ['view', 'click', 'share']
     
-    # Create interactions over the past week
     base_time = datetime.now() - timedelta(days=7)
     
-    for i in range(500):  # Create 500 interactions
+    for i in range(500): 
         user = random.choice(users)
         pin = random.choice(pins)
         interaction_type = random.choice(interaction_types)
         
-        # Random time in the past week
         random_hours = random.randint(0, 24 * 7)
         interaction_time = base_time + timedelta(hours=random_hours)
         
@@ -347,7 +335,6 @@ def create_sample_interactions(session: Session, users, pins):
     session.commit()
 
 def create_sample_likes_saves(session: Session, users, pins):
-    """Create sample likes and saves"""
     # Create likes
     for i in range(200):
         user = random.choice(users)
@@ -381,8 +368,6 @@ def create_sample_likes_saves(session: Session, users, pins):
     session.commit()
 
 def create_following_relationships(session: Session, users):
-    """Create following relationships"""
-    # Create realistic following patterns
     following_pairs = [
         (users[0], users[1]), (users[0], users[2]), (users[0], users[3]),
         (users[1], users[0]), (users[1], users[4]), (users[1], users[5]),

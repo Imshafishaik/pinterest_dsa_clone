@@ -1,14 +1,10 @@
 #!/usr/bin/env python3
-"""
-Pinterest Clone Application Entry Point
-"""
 
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import sys
 import os
 
-# Add src to path for imports
 sys.path.insert(0, os.path.dirname(__file__))
 
 from core_dsa.graph import PinterestGraph
@@ -23,7 +19,6 @@ from features.visual_search import VisualSearchEngine
 app = Flask(__name__)
 CORS(app)
 
-# Initialize components
 graph = PinterestGraph()
 cache_manager = PinterestCacheManager()
 search_index = PinterestSearchIndex()
@@ -33,10 +28,7 @@ autocomplete = SearchAutocomplete(search_index)
 recommender = InterestGraphRecommender(graph, cache_manager)
 visual_search = VisualSearchEngine()
 
-# Initialize sample data
 def initialize_sample_data():
-    """Initialize sample data for demonstration"""
-    # Add users
     users = [
         ("alice", {"name": "Alice", "interests": ["craft", "diy", "home"]}),
         ("bob", {"name": "Bob", "interests": ["food", "recipe", "cooking"]}),
@@ -66,7 +58,6 @@ def initialize_sample_data():
     for follower, following in following_pairs:
         graph.follow_user(follower, following)
     
-    # Add pins
     pins = [
         ("pin1", {"title": "DIY Wall Art Ideas", "description": "Creative DIY projects for home walls", "category": "craft", "likes": 245, "saves": 89, "author": "Alice"}),
         ("pin2", {"title": "Chocolate Chip Cookies", "description": "Best chocolate chip cookie recipe ever", "category": "food", "likes": 523, "saves": 201, "author": "Bob"}),
@@ -85,24 +76,20 @@ def initialize_sample_data():
     for pin_id, pin_data in pins:
         graph.add_pin(pin_id, pin_data)
         pin_data['pin_id'] = pin_id
-        pin_data['created_at'] = 1234567890  # Mock timestamp
+        pin_data['created_at'] = 1234567890
         pin_data['isLiked'] = False
         pin_data['isSaved'] = False
         pin_data['authorAvatar'] = f"https://picsum.photos/50/50?random={pin_id}"
         pin_data['imageUrl'] = f"https://picsum.photos/300/400?random={pin_id}"
         
-        # Cache the pin
         cache_manager.cache_pin(pin_id, pin_data)
         
-        # Add to feed ranking
         feed_ranker.update_feed_for_pin(pin_data)
         
-        # Index for search
         tags = [pin_data['category'], "ideas", "tutorial", "guide"]
         pin_data['tags'] = tags
         search_index.index_pin(pin_id, pin_data)
     
-    # Add boards
     boards = [
         ("board1", "DIY Projects", "craft"),
         ("board2", "Recipe Collection", "food"),
@@ -118,7 +105,6 @@ def initialize_sample_data():
         graph.add_board(board_id, {"name": board_name, "category": category})
         search_index.index_board(board_id, board_name)
     
-    # Create pin-board-user relationships
     pin_assignments = [
         ("alice", "pin1", "board1"), ("alice", "pin9", "board1"),
         ("bob", "pin2", "board2"), ("bob", "pin10", "board2"),
@@ -133,13 +119,11 @@ def initialize_sample_data():
     for user_id, pin_id, board_id in pin_assignments:
         graph.save_pin_to_board(user_id, pin_id, board_id)
     
-    # Add some interactions for trending detection
     for i in range(50):
         import random
         pin_id = random.choice([f"pin{i}" for i in range(1, 13)])
         priority_manager.record_pin_interaction(pin_id)
 
-# Initialize data on startup
 initialize_sample_data()
 
 @app.route('/')
@@ -163,7 +147,6 @@ def health_check():
 
 @app.route('/api/pins', methods=['GET'])
 def get_pins():
-    """Get all pins"""
     pins = []
     for i in range(1, 13):
         pin_data = cache_manager.get_cached_pin(f"pin{i}")
@@ -173,13 +156,11 @@ def get_pins():
 
 @app.route('/api/feed/<user_id>', methods=['GET'])
 def get_feed(user_id):
-    """Get personalized feed for user"""
     feed = feed_ranker.generate_user_feed(user_id, feed_size=10)
     return jsonify(feed)
 
 @app.route('/api/search', methods=['GET'])
 def search_pins():
-    """Search pins"""
     query = request.args.get('q', '')
     if not query:
         return jsonify([])
@@ -189,7 +170,6 @@ def search_pins():
 
 @app.route('/api/autocomplete', methods=['GET'])
 def autocomplete_search():
-    """Get search autocomplete suggestions"""
     query = request.args.get('q', '')
     user_id = request.args.get('user_id', None)
     
@@ -201,10 +181,8 @@ def autocomplete_search():
 
 @app.route('/api/recommendations/<user_id>', methods=['GET'])
 def get_recommendations(user_id):
-    """Get recommendations for user"""
     recommendations = recommender.recommend_pins(user_id, limit=10)
     
-    # Convert to JSON format
     recs = []
     for rec in recommendations:
         rec_data = {
@@ -222,13 +200,11 @@ def get_recommendations(user_id):
 
 @app.route('/api/trending', methods=['GET'])
 def get_trending():
-    """Get trending pins"""
     trending = priority_manager.get_trending_content(limit=10)
     return jsonify(trending)
 
 @app.route('/api/pin/<pin_id>/like', methods=['POST'])
 def like_pin(pin_id):
-    """Like a pin"""
     pin_data = cache_manager.get_cached_pin(pin_id)
     if pin_data:
         pin_data['likes'] = pin_data.get('likes', 0) + 1
@@ -239,7 +215,6 @@ def like_pin(pin_id):
 
 @app.route('/api/pin/<pin_id>/save', methods=['POST'])
 def save_pin(pin_id):
-    """Save a pin"""
     pin_data = cache_manager.get_cached_pin(pin_id)
     if pin_data:
         pin_data['saves'] = pin_data.get('saves', 0) + 1
@@ -250,14 +225,12 @@ def save_pin(pin_id):
 
 @app.route('/api/visual-search', methods=['POST'])
 def visual_search():
-    """Perform visual search"""
     data = request.get_json()
     image_url = data.get('image_url', '')
     
     if not image_url:
         return jsonify({'error': 'Image URL required'}), 400
     
-    # Index some sample images first
     for i in range(1, 7):
         visual_search.index_image(f"pin{i}", f"https://picsum.photos/300/400?random={i}")
     
@@ -266,7 +239,6 @@ def visual_search():
 
 @app.route('/api/stats', methods=['GET'])
 def get_stats():
-    """Get system statistics"""
     stats = {
         'graph_stats': graph.get_graph_stats(),
         'cache_stats': cache_manager.get_stats(),

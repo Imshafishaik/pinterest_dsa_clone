@@ -67,7 +67,7 @@ const AppContainer = styled.div`
 
 const MainContent = styled.main`
   flex: 1;
-  padding-top: 60px; /* Account for fixed header */
+  padding-top: 60px;
 `;
 
 function App() {

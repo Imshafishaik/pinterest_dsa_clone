@@ -127,7 +127,8 @@ const PinCard = ({ pin }) => {
   };
 
   return (
-    <Link to={`/pin/${pin.id}`}>
+    
+    <Link to={`/pin/${pin.id}`} className="pin-link">
       <PinCardContainer>
         <div style={{ overflow: 'hidden', borderRadius: '16px 16px 0 0' }}>
           <PinImage
