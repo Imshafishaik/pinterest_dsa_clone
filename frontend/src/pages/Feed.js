@@ -64,13 +64,13 @@ const Feed = () => {
         <FeedSubtitle>Personalized content powered by advanced algorithms</FeedSubtitle>
       </FeedHeader>
 
-      <AlgorithmInfo>
+      {/* <AlgorithmInfo>
         <AlgorithmTitle>🧠 Smart Feed Ranking Algorithm</AlgorithmTitle>
         <AlgorithmDescription>
           This feed is generated using O(n log k) k-way merge algorithm with personalized scoring based on:
           engagement metrics, recency, user affinity, and board preferences.
         </AlgorithmDescription>
-      </AlgorithmInfo>
+      </AlgorithmInfo> */}
 
       {loading ? (
         <LoadingSpinner />

@@ -91,6 +91,7 @@ class ActivityLogger:
     def __init__(self, capacity: int = 10000):
         self.activity_buffer = CircularBuffer(capacity)
         self.pin_activities = {}
+        self.user_activities = {}
     
     def log_activity(self, pin_id: str, user_id: str, action: str, metadata: Dict = None) -> None:
         activity = ActivityLog(

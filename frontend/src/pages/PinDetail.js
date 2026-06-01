@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { useParams } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import LoadingSpinner from '../components/LoadingSpinner';
+import axios from 'axios';
 
 const PinDetailContainer = styled.div`
   max-width: 800px;
@@ -10,10 +11,40 @@ const PinDetailContainer = styled.div`
   padding: 20px;
 `;
 
+const PinImageContainer = styled.div`
+  position: relative;
+  width: 100%;
+  margin-bottom: 24px;
+`;
+
 const PinImage = styled.img`
   width: 100%;
   border-radius: 16px;
-  margin-bottom: 24px;
+  display: block;
+`;
+
+const VisualSearchButton = styled.button`
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  background-color: rgba(255, 255, 255, 0.9);
+  color: ${({ theme }) => theme.colors.textPrimary};
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: all 0.2s;
+  
+  &:hover {
+    background-color: white;
+    transform: scale(1.05);
+  }
 `;
 
 const PinContent = styled.div`
@@ -213,18 +244,38 @@ const RelatedPinTitle = styled.div`
 
 const PinDetail = () => {
   const { id } = useParams();
-  const { pins, likePin, savePin } = useData();
+  const { pins, likePin, savePin, followUser } = useData();
   const [pin, setPin] = useState(null);
+  console.log(".......pin", pin);
+
   const [loading, setLoading] = useState(true);
+  const [visualSearchResults, setVisualSearchResults] = useState([]);
+  const [isSearchingVisual, setIsSearchingVisual] = useState(false);
 
   useEffect(() => {
     // Find the pin by ID
     const foundPin = pins.find(p => p.id === parseInt(id));
     if (foundPin) {
       setPin(foundPin);
+      // Automatically run visual search on load
+      performVisualSearch(foundPin.imageUrl);
     }
     setLoading(false);
   }, [id, pins]);
+
+  const performVisualSearch = async (imageUrl) => {
+    setIsSearchingVisual(true);
+    try {
+      const response = await axios.post('http://localhost:5001/api/visual-search', { image_url: imageUrl });
+      if (response.data && response.data.results) {
+        setVisualSearchResults(response.data.results);
+      }
+    } catch (error) {
+      console.error('Visual search failed', error);
+    } finally {
+      setIsSearchingVisual(false);
+    }
+  };
 
   if (loading) {
     return <LoadingSpinner />;
@@ -265,17 +316,24 @@ const PinDetail = () => {
     }
   ];
 
-  const relatedPins = pins.filter(p => p.id !== pin.id && p.category === pin.category).slice(0, 4);
+  const displayRelatedPins = visualSearchResults.length > 0
+    ? visualSearchResults
+    : pins.filter(p => p.id !== pin.id && p.category === pin.category).slice(0, 4);
 
   return (
     <PinDetailContainer>
-      <PinImage src={pin.imageUrl} alt={pin.title} />
-      
+      <PinImageContainer>
+        <PinImage src={pin.image_url} alt={pin.title} />
+        <VisualSearchButton onClick={() => performVisualSearch(pin.imageUrl)}>
+          {isSearchingVisual ? 'Searching...' : '🔍 Visual Search'}
+        </VisualSearchButton>
+      </PinImageContainer>
+
       <PinContent>
         <PinMain>
           <PinTitle>{pin.title}</PinTitle>
           <PinDescription>{pin.description}</PinDescription>
-          
+
           <PinMeta>
             <MetaItem>
               <span>❤️</span>
@@ -290,9 +348,9 @@ const PinDetail = () => {
               <span>{mockComments.length} comments</span>
             </MetaItem>
           </PinMeta>
-          
+
           <div style={{ display: 'flex', gap: '12px', marginBottom: '32px' }}>
-            <button 
+            <button
               onClick={() => likePin(pin.id)}
               style={{
                 padding: '12px 24px',
@@ -306,8 +364,8 @@ const PinDetail = () => {
             >
               {pin.isLiked ? '❤️ Liked' : '🤍 Like'}
             </button>
-            
-            <button 
+
+            <button
               onClick={() => savePin(pin.id)}
               style={{
                 padding: '12px 24px',
@@ -321,7 +379,7 @@ const PinDetail = () => {
             >
               {pin.isSaved ? '📌 Saved' : '⭐ Save'}
             </button>
-            
+
             <button style={{
               padding: '12px 24px',
               borderRadius: '24px',
@@ -333,7 +391,7 @@ const PinDetail = () => {
             }}>
               💬 Comment
             </button>
-            
+
             <button style={{
               padding: '12px 24px',
               borderRadius: '24px',
@@ -347,19 +405,19 @@ const PinDetail = () => {
             </button>
           </div>
         </PinMain>
-        
+
         <PinSidebar>
           <AuthorCard>
             <AuthorHeader>
               <AuthorAvatar src={pin.authorAvatar} alt={pin.author} />
               <AuthorInfo>
-                <AuthorName>{pin.author}</AuthorName>
-                <AuthorUsername>@{pin.author.toLowerCase()}</AuthorUsername>
+                <AuthorName>{pin.author || 'Unknown'}</AuthorName>
+                <AuthorUsername>@{(pin.author || 'unknown').toLowerCase()}</AuthorUsername>
               </AuthorInfo>
-              <FollowButton>Follow</FollowButton>
+              <FollowButton onClick={() => followUser(pin.author)}>Follow</FollowButton>
             </AuthorHeader>
           </AuthorCard>
-          
+
           <CommentsSection>
             <CommentsTitle>Comments</CommentsTitle>
             {mockComments.map(comment => (
@@ -375,14 +433,19 @@ const PinDetail = () => {
           </CommentsSection>
         </PinSidebar>
       </PinContent>
-      
+
       <RelatedPins>
-        <RelatedSectionTitle>More like this</RelatedSectionTitle>
+        <RelatedSectionTitle>
+          {visualSearchResults.length > 0 ? 'Visually Similar Pins' : 'More like this'}
+        </RelatedSectionTitle>
         <RelatedGrid>
-          {relatedPins.map(relatedPin => (
-            <RelatedPin key={relatedPin.id}>
-              <RelatedImage src={relatedPin.imageUrl} alt={relatedPin.title} />
-              <RelatedPinTitle>{relatedPin.title}</RelatedPinTitle>
+          {displayRelatedPins.map(relatedPin => (
+            <RelatedPin key={relatedPin.pin_id || relatedPin.id}>
+              <RelatedImage src={relatedPin.image_url || relatedPin.imageUrl} alt={relatedPin.title || 'Similar Pin'} />
+              <RelatedPinTitle>
+                {relatedPin.title || 'Visually Similar'}
+                {relatedPin.similarity_score && <span style={{ float: 'right', color: '#666' }}>{(relatedPin.similarity_score * 100).toFixed(0)}% Match</span>}
+              </RelatedPinTitle>
             </RelatedPin>
           ))}
         </RelatedGrid>

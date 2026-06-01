@@ -10,14 +10,11 @@ class PinService:
     
     def __init__(self):
         self.cache = cache_manager
+        # Ensure database is initialized
+        if not db_manager.engine:
+            db_manager.initialize()
     
     def get_pin_by_id(self, pin_id: int) -> Optional[Pin]:
-        cache_key = CACHE_KEYS['PIN'].format(id=pin_id)
-        
-        cached_pin = self.cache.get(cache_key)
-        if cached_pin:
-            return json.loads(cached_pin)
-        
         with db_manager.get_session() as session:
             pin = session.query(Pin).options(
                 joinedload(Pin.creator),
@@ -29,7 +26,6 @@ class PinService:
             
             if pin:
                 pin_data = self._serialize_pin(pin)
-                self.cache.set(cache_key, json.dumps(pin_data), ttl=3600)
                 return pin_data
         
         return None
@@ -422,10 +418,16 @@ class PinService:
         ]
         
         for key in cache_keys_to_clear:
-            self.cache.delete(key)
+            try:
+                self.cache.delete(key)
+            except:
+                pass  # Ignore cache deletion errors
         
-        # Clear search cache patterns
-        self.cache.delete_pattern('search:*')
+        # Clear search cache patterns - simplified for now
+        try:
+            self.cache.delete_pattern('search:*')
+        except:
+            pass  # Ignore cache deletion errors
 
 # Global pin service instance
 pin_service = PinService()

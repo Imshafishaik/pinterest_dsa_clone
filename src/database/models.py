@@ -288,7 +288,7 @@ class Interaction(Base):
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
     pin_id = Column(Integer, ForeignKey('pins.id'), nullable=False, index=True)
     interaction_type = Column(String(20), nullable=False, index=True)  # 'view', 'click', 'share'
-    metadata = Column(Text)  # JSON metadata
+    interaction_metadata = Column(Text)  # JSON metadata
     created_at = Column(DateTime, default=func.now())
     
     # Relationships
@@ -301,6 +301,6 @@ class Interaction(Base):
             'user_id': self.user_id,
             'pin_id': self.pin_id,
             'interaction_type': self.interaction_type,
-            'metadata': self.metadata,
+            'metadata': self.interaction_metadata,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }

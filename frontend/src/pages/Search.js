@@ -111,13 +111,13 @@ const Search = () => {
         <SearchSubtitle>Discover ideas with smart search autocomplete</SearchSubtitle>
       </SearchHeader>
 
-      <AlgorithmInfo>
+      {/* <AlgorithmInfo>
         <h3>🔍 Search Autocomplete Algorithm</h3>
         <p>
           Powered by Trie data structure with O(m) prefix traversal and frequency-based ranking.
           Provides instant suggestions as you type with personalized recommendations.
         </p>
-      </AlgorithmInfo>
+      </AlgorithmInfo> */}
 
       <AutocompleteContainer>
         <AutocompleteTitle>Popular searches</AutocompleteTitle>

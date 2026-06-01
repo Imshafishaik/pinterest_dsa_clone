@@ -42,6 +42,7 @@ class PinterestTrie:
         
         for char in word:
             current = current.children[char]
+            found = False
             
             for i, (freq, heap_word) in enumerate(current.completions_heap):
                 if heap_word == word:
@@ -83,6 +84,7 @@ class PinterestTrie:
                 return []
             node = node.children[char]
         
+        words = []
         self._collect_words(node, prefix, words)
         return words
     
@@ -215,6 +217,7 @@ class TagIndexer:
     def __init__(self):
         self.tag_trie = PinterestTrie(max_completions=20)
         self.pin_tags = defaultdict(set)
+        self.tag_pins = defaultdict(set)
     
     def add_tags_to_pin(self, pin_id: str, tags: List[str]) -> None:
         for tag in tags:

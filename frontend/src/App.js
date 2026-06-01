@@ -2,11 +2,15 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import styled, { ThemeProvider, createGlobalStyle } from 'styled-components';
 import Header from './components/Header';
+import CreatePin from './components/CreatePin';
+import Login from './components/Login';
+import Signup from './components/Signup';
 import Home from './pages/Home';
 import Feed from './pages/Feed';
 import Search from './pages/Search';
 import Profile from './pages/Profile';
 import PinDetail from './pages/PinDetail';
+import Explore from './pages/Explore';
 import { DataProvider } from './context/DataContext';
 
 const GlobalStyle = createGlobalStyle`
@@ -83,8 +87,12 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/feed" element={<Feed />} />
                 <Route path="/search" element={<Search />} />
+                <Route path="/explore" element={<Explore />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/pin/:id" element={<PinDetail />} />
+                <Route path="/create" element={<CreatePin />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
               </Routes>
             </MainContent>
           </AppContainer>

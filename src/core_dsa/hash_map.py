@@ -274,6 +274,19 @@ class PinterestCacheManager:
     def cleanup_expired(self) -> int:
         return self.pin_cache.cleanup_expired()
     
+    def delete(self, key: str) -> bool:
+        return self.pin_cache.remove(key)
+    
+    def delete_pattern(self, pattern: str) -> int:
+        # Simple pattern matching for cache deletion
+        # For now, just clear all pins if pattern contains 'search:*'
+        if pattern == 'search:*':
+            cleared_count = self.pin_cache.size
+            self.pin_cache.cache.clear()
+            self.pin_cache.size = 0
+            return cleared_count
+        return 0
+    
     def get_stats(self) -> Dict:
         return {
             'pin_cache': {

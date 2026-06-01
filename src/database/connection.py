@@ -7,7 +7,7 @@ import redis
 import logging
 from contextlib import contextmanager
 
-DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://postgres:postgres@localhost:5432/pinterest_db')
+DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///pinterest_db.sqlite')
 REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
 
 logging.basicConfig(level=logging.INFO)

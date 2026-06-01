@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styled, { ThemeConsumer } from 'styled-components';
 import { useData } from '../context/DataContext';
+import Notifications from './Notifications';
 
 const HeaderContainer = styled.header`
   position: fixed;
@@ -192,16 +193,72 @@ const MobileMenuButton = styled.button`
   }
 `;
 
+const UserAvatar = styled.img`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  margin-right: 8px;
+`;
+
+const Username = styled.span`
+  font-weight: 600;
+  color: #333;
+  margin-right: 12px;
+`;
+
+const LogoutButton = styled.button`
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+
+  &:hover {
+    background: #f0f0f0;
+    color: #333;
+  }
+`;
+
+const SearchButton = styled.button`
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #666;
+  padding: 8px;
+  border-radius: 50%;
+
+  &:hover {
+    background: #f0f0f0;
+    color: #333;
+  }
+`;
+
 const Header = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const navigate = useNavigate();
-  const { searchPins, loading } = useData();
+  const { searchPins, loading, currentUser, logout } = useData();
+
+  const handleCreatePin = () => {
+    navigate('/create');
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
 
   const handleSearch = (e) => {
     const query = e.target.value;
     setSearchQuery(query);
-    
+
     if (query.trim()) {
       setIsSearching(true);
       searchPins(query);
@@ -223,7 +280,7 @@ const Header = () => {
       <HeaderContent>
         <Logo to="/">
           <LogoIcon>P</LogoIcon>
-          Pinterest Clone
+          Pinterest
         </Logo>
 
         <Nav>
@@ -251,23 +308,33 @@ const Header = () => {
         </SearchContainer>
 
         <Actions>
-          <CreateButton>Create</CreateButton>
-          
-          <IconButton title="Notifications">
-            🔔
-          </IconButton>
-          
+          {currentUser ? (
+            <>
+              <UserAvatar src={currentUser.avatar_url || `https://picsum.photos/50/50?random=${currentUser.id}`} />
+              <Username>{currentUser.username}</Username>
+              <LogoutButton onClick={handleLogout}>Logout</LogoutButton>
+              <CreateButton onClick={handleCreatePin}>Create</CreateButton>
+            </>
+          ) : (
+            <>
+              <CreateButton onClick={() => navigate('/login')}>Login</CreateButton>
+              <CreateButton onClick={() => navigate('/signup')}>Sign Up</CreateButton>
+            </>
+          )}
+          {/* <SearchButton onClick={() => setIsSearching(!isSearching)}>
+            {isSearching ? '✕' : '🔍'}
+          </SearchButton>
+          <Notifications />
           <IconButton title="Messages">
             💬
           </IconButton>
-          
           <Avatar title="Profile">
             <img
               src="https://picsum.photos/100/100?random=user"
               alt="Profile"
             />
-          </Avatar>
-          
+          </Avatar> */}
+
           <MobileMenuButton>
             ☰
           </MobileMenuButton>

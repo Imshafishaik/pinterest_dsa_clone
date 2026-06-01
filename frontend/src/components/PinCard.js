@@ -91,9 +91,9 @@ const ActionButton = styled.button`
   padding: 6px 12px;
   border-radius: 20px;
   border: none;
-  background-color: ${({ theme, variant }) => 
+  background-color: ${({ theme, variant }) =>
     variant === 'primary' ? theme.colors.primary : 'transparent'};
-  color: ${({ theme, variant }) => 
+  color: ${({ theme, variant }) =>
     variant === 'primary' ? 'white' : theme.colors.textPrimary};
   font-size: 12px;
   font-weight: 600;
@@ -101,8 +101,8 @@ const ActionButton = styled.button`
   transition: all 0.2s ease;
   
   &:hover {
-    background-color: ${({ theme, variant }) => 
-      variant === 'primary' ? theme.colors.primaryHover : theme.colors.backgroundSecondary};
+    background-color: ${({ theme, variant }) =>
+    variant === 'primary' ? theme.colors.primaryHover : theme.colors.backgroundSecondary};
   }
 `;
 
@@ -127,49 +127,51 @@ const PinCard = ({ pin }) => {
   };
 
   return (
-    
+
     <Link to={`/pin/${pin.id}`} className="pin-link">
       <PinCardContainer>
         <div style={{ overflow: 'hidden', borderRadius: '16px 16px 0 0' }}>
+          {console.log(".......pin image", pin.imageUrl)}
+
           <PinImage
             src={pin.imageUrl}
             alt={pin.title}
             style={{ height: `${Math.floor(Math.random() * 200) + 200}px` }}
           />
         </div>
-        
+
         <PinContent>
           <PinTitle>{pin.title}</PinTitle>
           {pin.description && (
             <PinDescription>{pin.description}</PinDescription>
           )}
-          
+
           <PinAuthor>
             <AuthorAvatar src={pin.authorAvatar} alt={pin.author} />
             <AuthorName>{pin.author}</AuthorName>
           </PinAuthor>
         </PinContent>
-        
+
         <PinActions>
-          <ActionButton 
+          <ActionButton
             variant={pin.isLiked ? 'primary' : 'secondary'}
             onClick={handleLike}
           >
             {pin.isLiked ? '🔴' : '⚪'} Like
           </ActionButton>
-          
+
           <ActionButton variant="secondary">
             💬 Comment
           </ActionButton>
-          
-          <ActionButton 
+
+          <ActionButton
             variant={pin.isSaved ? 'primary' : 'secondary'}
             onClick={handleSave}
           >
             {pin.isSaved ? '📌' : '⭐'} Save
           </ActionButton>
         </PinActions>
-        
+
         <div style={{ padding: '0 12px 12px', display: 'flex', gap: '16px' }}>
           <ActionCount>{pin.likes} likes</ActionCount>
           <ActionCount>{pin.saves} saves</ActionCount>

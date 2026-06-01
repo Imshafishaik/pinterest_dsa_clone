@@ -11,7 +11,7 @@ const initialState = {
   trending: [],
   loading: false,
   error: null,
-  currentUser: null,
+  currentUser: localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null,
   notifications: [],
 };
 
@@ -25,12 +25,13 @@ const actionTypes = {
   SET_SEARCH_RESULTS: 'SET_SEARCH_RESULTS',
   SET_RECOMMENDATIONS: 'SET_RECOMMENDATIONS',
   SET_TRENDING: 'SET_TRENDING',
-  SET_CURRENT_USER: 'SET_CURRENT_USER',
-  SET_NOTIFICATIONS: 'SET_NOTIFICATIONS',
   ADD_PIN: 'ADD_PIN',
+  FOLLOW_USER: 'FOLLOW_USER',
   LIKE_PIN: 'LIKE_PIN',
   SAVE_PIN: 'SAVE_PIN',
-  FOLLOW_USER: 'FOLLOW_USER',
+  UNLIKE_PIN: 'UNLIKE_PIN',
+  UNSAVE_PIN: 'UNSAVE_PIN',
+  SET_CURRENT_USER: 'SET_CURRENT_USER',
 };
 
 const dataReducer = (state, action) => {
@@ -54,7 +55,7 @@ const dataReducer = (state, action) => {
     case actionTypes.SET_TRENDING:
       return { ...state, trending: action.payload, loading: false };
     case actionTypes.SET_CURRENT_USER:
-      return { ...state, currentUser: action.payload };
+      return { ...state, currentUser: action.payload, loading: false };
     case actionTypes.SET_NOTIFICATIONS:
       return { ...state, notifications: action.payload };
     case actionTypes.ADD_PIN:
@@ -92,8 +93,16 @@ const dataReducer = (state, action) => {
 };
 
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000',
+  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5001',
   timeout: 10000,
+});
+
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
 
 const DataContext = createContext();
@@ -115,7 +124,7 @@ export const DataProvider = ({ children }) => {
       const response = await api.get('/api/pins');
       const pins = response.data.map(pin => ({
         ...pin,
-        id: parseInt(pin.pin_id.replace('pin', '')),
+        id: pin.pin_id ? parseInt(pin.pin_id.replace('pin', '')) : pin.id,
         isLiked: pin.isLiked || false,
         isSaved: pin.isSaved || false,
       }));
@@ -131,7 +140,7 @@ export const DataProvider = ({ children }) => {
       const response = await api.get(`/api/feed/${userId}`);
       const feed = response.data.map(item => ({
         ...item.pin_data,
-        id: parseInt(item.pin_data.pin_id.replace('pin', '')),
+        id: item.pin_data.pin_id ? parseInt(item.pin_data.pin_id.replace('pin', '')) : item.pin_data.id,
         rankingScore: item.ranking_score || 0.8,
         isLiked: item.pin_data.isLiked || false,
         isSaved: item.pin_data.isSaved || false,
@@ -148,7 +157,7 @@ export const DataProvider = ({ children }) => {
       const response = await api.get('/api/search', { params: { q: query } });
       const results = response.data.map(item => ({
         ...item,
-        id: parseInt(item.pin_id.replace('pin', '')),
+        id: item.pin_id ? parseInt(item.pin_id.replace('pin', '')) : item.id,
         isLiked: item.isLiked || false,
         isSaved: item.isSaved || false,
       }));
@@ -164,7 +173,7 @@ export const DataProvider = ({ children }) => {
       const response = await api.get(`/api/recommendations/${userId}`);
       const recommendations = response.data.map(item => ({
         ...item,
-        id: parseInt(item.pin_id.replace('pin', '')),
+        id: item.pin_id ? parseInt(item.pin_id.replace('pin', '')) : item.id,
         isLiked: item.isLiked || false,
         isSaved: item.isSaved || false,
       }));
@@ -180,7 +189,7 @@ export const DataProvider = ({ children }) => {
       const response = await api.get('/api/trending');
       const trending = response.data.map(item => ({
         ...item,
-        id: parseInt(item.pin_id.replace('pin', '')),
+        id: item.pin_id ? parseInt(item.pin_id.replace('pin', '')) : item.id,
         isLiked: item.isLiked || false,
         isSaved: item.isSaved || false,
       }));
@@ -208,8 +217,114 @@ export const DataProvider = ({ children }) => {
     }
   };
 
-  const followUser = (userId) => {
-    dispatch({ type: actionTypes.FOLLOW_USER, payload: userId });
+  const createPin = async (pinData) => {
+    try {
+      setLoading(true);
+      const response = await api.post('/api/pins', pinData);
+      const newPin = {
+        ...response.data,
+        id: response.data.pin_id ? parseInt(response.data.pin_id.replace('pin', '')) : response.data.id,
+        isLiked: false,
+        isSaved: false,
+      };
+      dispatch({ type: actionTypes.ADD_PIN, payload: newPin });
+      return newPin;
+    } catch (error) {
+      setError(error.message);
+      throw error;
+    }
+  };
+
+  const login = async (credentials) => {
+    try {
+      setLoading(true);
+      const response = await api.post('/api/auth/login', credentials);
+      
+      // Store token in localStorage
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+      
+      dispatch({ type: actionTypes.SET_CURRENT_USER, payload: response.data.user });
+      return response.data;
+    } catch (error) {
+      setError(error.response?.data?.error || error.message);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const register = async (userData) => {
+    try {
+      setLoading(true);
+      const response = await api.post('/api/auth/register', userData);
+      
+      // Store token in localStorage
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+      
+      dispatch({ type: actionTypes.SET_CURRENT_USER, payload: response.data.user });
+      return response.data;
+    } catch (error) {
+      setError(error.response?.data?.error || error.message);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const logout = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (token) {
+        await api.post('/api/auth/logout', {}, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+      }
+      
+      // Clear localStorage
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      
+      dispatch({ type: actionTypes.SET_CURRENT_USER, payload: null });
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+  const getCurrentUser = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        return null;
+      }
+      
+      const response = await api.get('/api/auth/current', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      dispatch({ type: actionTypes.SET_CURRENT_USER, payload: response.data.user });
+      return response.data.user;
+    } catch (error) {
+      // If token is invalid, clear localStorage
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      dispatch({ type: actionTypes.SET_CURRENT_USER, payload: null });
+      return null;
+    }
+  };
+
+  const followUser = async (userId) => {
+    try {
+      await api.post(`/api/user/${userId}/follow`);
+      dispatch({ type: actionTypes.FOLLOW_USER, payload: userId });
+    } catch (error) {
+      console.error('Error following user:', error);
+    }
   };
 
   useEffect(() => {
@@ -217,6 +332,8 @@ export const DataProvider = ({ children }) => {
     fetchFeed();
     fetchRecommendations();
     fetchTrending();
+    // Restore session on mount
+    getCurrentUser();
   }, []);
 
   const value = {
@@ -228,7 +345,12 @@ export const DataProvider = ({ children }) => {
     fetchTrending,
     likePin,
     savePin,
+    createPin,
     followUser,
+    login,
+    register,
+    logout,
+    getCurrentUser,
     setLoading,
     setError,
   };

@@ -120,6 +120,7 @@ class TrendingDetector:
         timestamp = time.time()
         self.interaction_history[pin_id].append(timestamp)
         
+        cutoff_time = timestamp - (self.window_hours * 3600)
         self.interaction_history[pin_id] = [
             ts for ts in self.interaction_history[pin_id] if ts > cutoff_time
         ]

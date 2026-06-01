@@ -25,7 +25,7 @@ code {
   gap: 16px;
 }
 
-.pin-link{
+.pin-link {
   height: 600px;
   width: 300px;
 }
@@ -125,8 +125,13 @@ code {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Responsive */
@@ -134,12 +139,12 @@ code {
   .container {
     padding: 0 8px;
   }
-  
+
   .btn {
     padding: 10px 20px;
     font-size: 14px;
   }
-  
+
   .input {
     padding: 10px 14px;
     font-size: 14px;
